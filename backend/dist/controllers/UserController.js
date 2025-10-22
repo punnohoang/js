@@ -32,6 +32,26 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const data_source_1 = require("../data-source");
@@ -41,78 +61,88 @@ class UserController {
     constructor() {
         this.userRepository = data_source_1.AppDataSource.getRepository(User_1.User);
     }
-    async all(_request, response) {
-        try {
-            const users = await this.userRepository.find({
-                select: ["id", "firstName", "lastName", "email", "role", "specialization"]
-            });
-            return response.json(users);
-        }
-        catch (error) {
-            return response.status(500).json({ error: "Error fetching users" });
-        }
-    }
-    async one(request, response) {
-        try {
-            const id = parseInt(request.params.id);
-            const user = await this.userRepository.findOne({
-                where: { id },
-                select: ["id", "firstName", "lastName", "email", "role", "specialization"]
-            });
-            if (!user) {
-                return response.status(404).json({ error: "User not found" });
+    all(_request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const users = yield this.userRepository.find({
+                    select: ["id", "firstName", "lastName", "email", "role", "specialization"]
+                });
+                return response.json(users);
             }
-            return response.json(user);
-        }
-        catch (error) {
-            return response.status(500).json({ error: "Error fetching user" });
-        }
-    }
-    async create(request, response) {
-        try {
-            const userData = request.body;
-            const user = Object.assign(new User_1.User(), userData);
-            await user.hashPassword();
-            const savedUser = await this.userRepository.save(user);
-            const { password: _, ...userWithoutPassword } = savedUser;
-            return response.json(userWithoutPassword);
-        }
-        catch (error) {
-            return response.status(500).json({ error: "Error creating user" });
-        }
-    }
-    async update(request, response) {
-        try {
-            const id = parseInt(request.params.id);
-            const user = await this.userRepository.findOneBy({ id });
-            if (!user) {
-                return response.status(404).json({ error: "User not found" });
+            catch (error) {
+                return response.status(500).json({ error: "Error fetching users" });
             }
-            if (request.body.password) {
-                request.body.password = await bcrypt.hash(request.body.password, 10);
-            }
-            this.userRepository.merge(user, request.body);
-            const results = await this.userRepository.save(user);
-            const { password, ...userWithoutPassword } = results;
-            return response.json(userWithoutPassword);
-        }
-        catch (error) {
-            return response.status(500).json({ error: "Error updating user" });
-        }
+        });
     }
-    async remove(request, response) {
-        try {
-            const id = parseInt(request.params.id);
-            const user = await this.userRepository.findOneBy({ id });
-            if (!user) {
-                return response.status(404).json({ error: "User not found" });
+    one(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const id = parseInt(request.params.id);
+                const user = yield this.userRepository.findOne({
+                    where: { id },
+                    select: ["id", "firstName", "lastName", "email", "role", "specialization"]
+                });
+                if (!user) {
+                    return response.status(404).json({ error: "User not found" });
+                }
+                return response.json(user);
             }
-            await this.userRepository.remove(user);
-            return response.json({ message: "User deleted successfully" });
-        }
-        catch (error) {
-            return response.status(500).json({ error: "Error deleting user" });
-        }
+            catch (error) {
+                return response.status(500).json({ error: "Error fetching user" });
+            }
+        });
+    }
+    create(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userData = request.body;
+                const user = Object.assign(new User_1.User(), userData);
+                yield user.hashPassword();
+                const savedUser = yield this.userRepository.save(user);
+                const { password: _ } = savedUser, userWithoutPassword = __rest(savedUser, ["password"]);
+                return response.json(userWithoutPassword);
+            }
+            catch (error) {
+                return response.status(500).json({ error: "Error creating user" });
+            }
+        });
+    }
+    update(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const id = parseInt(request.params.id);
+                const user = yield this.userRepository.findOneBy({ id });
+                if (!user) {
+                    return response.status(404).json({ error: "User not found" });
+                }
+                if (request.body.password) {
+                    request.body.password = yield bcrypt.hash(request.body.password, 10);
+                }
+                this.userRepository.merge(user, request.body);
+                const results = yield this.userRepository.save(user);
+                const { password } = results, userWithoutPassword = __rest(results, ["password"]);
+                return response.json(userWithoutPassword);
+            }
+            catch (error) {
+                return response.status(500).json({ error: "Error updating user" });
+            }
+        });
+    }
+    remove(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const id = parseInt(request.params.id);
+                const user = yield this.userRepository.findOneBy({ id });
+                if (!user) {
+                    return response.status(404).json({ error: "User not found" });
+                }
+                yield this.userRepository.remove(user);
+                return response.json({ message: "User deleted successfully" });
+            }
+            catch (error) {
+                return response.status(500).json({ error: "Error deleting user" });
+            }
+        });
     }
 }
 exports.UserController = UserController;

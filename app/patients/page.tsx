@@ -86,9 +86,8 @@ export default function PatientsPage() {
                   <div className="text-right">
                     <p className="text-sm">Lần khám cuối: {patient.lastVisit}</p>
                     <span
-                      className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                        patient.status === "Khỏe mạnh" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                      }`}
+                      className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-medium ${patient.status === "Khỏe mạnh" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                        }`}
                     >
                       {patient.status}
                     </span>

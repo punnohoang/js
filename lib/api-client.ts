@@ -344,6 +344,13 @@ class ApiClient {
     })
   }
 
+  // Customer endpoints (Customer entity)
+  async getCustomers(): Promise<ApiResponse<User[]>> {
+    return this.request<User[]>(`/customers`, {
+      method: "GET",
+    })
+  }
+
   async createPet(pet: Omit<Pet, "id">): Promise<ApiResponse<Pet>> {
     return this.request<Pet>("/pets", {
       method: "POST",

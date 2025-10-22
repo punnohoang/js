@@ -158,11 +158,10 @@ export default function CheckInPage() {
                             <p className="text-sm text-muted-foreground">{appointment.ownerName}</p>
                           </div>
                           <span
-                            className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                              appointment.status === "CONFIRMED"
+                            className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${appointment.status === "CONFIRMED"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-yellow-100 text-yellow-800"
-                            }`}
+                              }`}
                           >
                             {appointment.status === "CONFIRMED" ? "Đã check-in" : "Chờ check-in"}
                           </span>

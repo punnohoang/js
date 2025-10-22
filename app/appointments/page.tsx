@@ -22,10 +22,17 @@ export default function AppointmentsPage() {
   const [formData, setFormData] = useState({
     petName: "",
     petId: "",
+    petType: "",
+    customerId: "",
     appointmentDate: "",
     appointmentTime: "",
     reason: "",
+    veterinarianId: "",
   })
+
+  const [customers, setCustomers] = useState<any[]>([])
+  const [pets, setPets] = useState<any[]>([])
+  const [vets, setVets] = useState<any[]>([])
 
   useEffect(() => {
     loadAppointments()
@@ -46,24 +53,104 @@ export default function AppointmentsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const newAppointment = {
-      petId: formData.petId,
-      petName: formData.petName,
-      ownerName: user?.name || "",
+    // client-side validation
+    setError(null)
+    // If receptionist selected a pet but didn't pick a customer, try to derive customerId from the pet object
+    let customerIdToSend = formData.customerId || (user?.role === 'CUSTOMER' ? user.id : '')
+    if (!customerIdToSend && formData.petId) {
+      const selectedPet = pets.find((p) => String(p.id) === String(formData.petId))
+      // API pets may include owner or ownerId
+      if (selectedPet) {
+        customerIdToSend = selectedPet.ownerId || (selectedPet.owner && String(selectedPet.owner.id)) || ''
+      }
+    }
+  if (!customerIdToSend) return setError('Vui lòng chọn khách hàng')
+  if (!formData.petId && !formData.petName) return setError('Vui lòng nhập hoặc chọn thú cưng')
+  if (!formData.petType) return setError('Vui lòng nhập loại thú cưng')
+    if (!formData.appointmentDate) return setError('Vui lòng chọn ngày hẹn')
+    if (!formData.appointmentTime) return setError('Vui lòng chọn giờ hẹn')
+
+    const newAppointment: any = {
+      customerId: customerIdToSend,
       date: formData.appointmentDate,
       time: formData.appointmentTime,
       reason: formData.reason,
+      veterinarianId: formData.veterinarianId || undefined,
     }
 
-    const response = await apiClient.createAppointment(newAppointment)
-    if (response.success) {
-      await loadAppointments()
-      setShowForm(false)
-      setFormData({ petName: "", petId: "", appointmentDate: "", appointmentTime: "", reason: "" })
+    // If a petId was selected, send it. Otherwise include basic pet details so backend can accept a free-text pet.
+    if (formData.petId) {
+      newAppointment.petId = formData.petId
     } else {
-      setError(response.error || "Failed to create appointment")
+      newAppointment.pet = {
+        name: formData.petName,
+        species: formData.petType,
+      }
+    }
+
+    const customerObj = customers.find((c) => String(c.id) === String(customerIdToSend))
+    const ownerName = customerObj ? `${customerObj.firstName || ''} ${customerObj.lastName || ''}`.trim() : ''
+
+    // apiClient expects petName and ownerName fields in the Appointment payload shape
+    const payload = {
+      ...newAppointment,
+      petName: formData.petName,
+      ownerName,
+    }
+
+    try {
+      console.log('Creating appointment with payload', payload)
+      const response = await apiClient.createAppointment(payload as any)
+      if (response.success && response.data) {
+        await loadAppointments()
+        setShowForm(false)
+  setFormData({ petName: "", petId: "", petType: "", customerId: "", appointmentDate: "", appointmentTime: "", reason: "", veterinarianId: "" })
+      } else {
+        // show detailed server error when available
+        const serverError = (response && (response.error || (response as any).message)) || 'Failed to create appointment'
+        console.error('Create appointment failed', serverError, response)
+        setError(typeof serverError === 'string' ? serverError : JSON.stringify(serverError))
+      }
+    } catch (err) {
+      console.error('Unexpected error creating appointment', err)
+      setError(err instanceof Error ? err.message : 'Unexpected error')
     }
   }
+
+  useEffect(() => {
+    // Load customers and vets when receptionist opens form
+    const loadLists = async () => {
+      const customersResp = await apiClient.getUsers('CUSTOMER')
+      if (customersResp.success && customersResp.data) {
+        // Ensure we only show actual customer accounts (defensive filter)
+        const onlyCustomers = (customersResp.data as any[]).filter((u) => u.role === 'CUSTOMER')
+        setCustomers(onlyCustomers)
+      }
+
+      const vetsResp = await apiClient.getUsers('VETERINARIAN')
+      if (vetsResp.success && vetsResp.data) setVets(vetsResp.data)
+    }
+
+    if (showForm && user?.role === 'RECEPTIONIST') {
+      loadLists()
+    }
+  }, [showForm, user?.role])
+
+  useEffect(() => {
+    // when customer selected, load that customer's pets
+    const loadPets = async () => {
+      if (!formData.customerId) return setPets([])
+      const resp = await apiClient.getPets(formData.customerId)
+      if (resp.success && resp.data) setPets(resp.data)
+    }
+    loadPets()
+  }, [formData.customerId])
+
+  useEffect(() => {
+    // when pet selected, set petName and petType to selected pet's values
+    const sel = pets.find((p) => String(p.id) === String(formData.petId))
+    if (sel) setFormData((f) => ({ ...f, petName: sel.name, petType: sel.species || f.petType }))
+  }, [formData.petId, pets])
 
   if (user?.role !== "CUSTOMER" && user?.role !== "RECEPTIONIST") {
     return <DashboardLayout>Không có quyền truy cập</DashboardLayout>
@@ -114,21 +201,52 @@ export default function AppointmentsPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Loại thú cưng</label>
-                    <Select
-                      value={formData.petId}
-                      onValueChange={(value) => setFormData({ ...formData, petId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn loại thú cưng" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dog">Chó</SelectItem>
-                        <SelectItem value="cat">Mèo</SelectItem>
-                        <SelectItem value="bird">Chim</SelectItem>
-                        <SelectItem value="rabbit">Thỏ</SelectItem>
-                        <SelectItem value="other">Khác</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* For receptionists/customers choose an existing pet from the customer's pets; fallback to entering a name */}
+                    {user?.role === 'RECEPTIONIST' ? (
+                      <>
+                        <label className="text-sm font-medium">Khách hàng</label>
+                        <Select value={formData.customerId} onValueChange={(value) => setFormData({ ...formData, customerId: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn khách hàng" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {customers.map((c) => (
+                              <SelectItem key={c.id} value={String(c.id)}>
+                                {c.firstName} {c.lastName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <label className="text-sm font-medium">Thú cưng</label>
+                        <Select value={formData.petId} onValueChange={(value) => setFormData({ ...formData, petId: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn thú cưng" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {pets.map((p) => (
+                              <SelectItem key={p.id} value={String(p.id)}>
+                                {p.name} {p.species ? `- ${p.species}` : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </>
+                    ) : (
+                      // Customer role: list their pets (loaded when form opens)
+                      <Select value={formData.petId} onValueChange={(value) => setFormData({ ...formData, petId: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn thú cưng" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pets.map((p) => (
+                            <SelectItem key={p.id} value={String(p.id)}>
+                              {p.name} {p.species ? `- ${p.species}` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Ngày hẹn</label>
@@ -202,11 +320,10 @@ export default function AppointmentsPage() {
                         </div>
                         <div className="text-right">
                           <span
-                            className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                              appointment.status === "CONFIRMED"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
+                            className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${appointment.status === "CONFIRMED"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                              }`}
                           >
                             {appointment.status === "CONFIRMED" ? "Đã xác nhận" : "Chờ xác nhận"}
                           </span>

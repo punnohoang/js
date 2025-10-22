@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppDataSource = void 0;
+require("reflect-metadata");
 const typeorm_1 = require("typeorm");
 const Customer_1 = require("./entities/Customer");
 const Pet_1 = require("./entities/Pet");
@@ -17,7 +18,7 @@ exports.AppDataSource = new typeorm_1.DataSource({
     password: process.env.DB_PASSWORD || "password123",
     database: process.env.DB_NAME || "vet_clinic",
     synchronize: true,
-    logging: true,
+    logging: ["error", "warn", "info"],
     entities: [Customer_1.Customer, Pet_1.Pet, Appointment_1.Appointment, MedicalRecord_1.MedicalRecord, User_1.User, Invoice_1.Invoice, InvoiceItem_1.InvoiceItem],
     migrations: [],
     subscribers: [],
