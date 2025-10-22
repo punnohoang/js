@@ -109,21 +109,6 @@ export class AppointmentController {
             if (petId) {
                 pet = await petRepo.findOne({ where: { id: parseInt(petId) } });
                 if (!pet) return response.status(400).json({ error: "Pet not found" });
-            } else if (request.body.pet) {
-                // If frontend provided a pet object (typed input), create a Pet record linked to the resolved customer
-                const petData = request.body.pet as any;
-                if (!customer) return response.status(400).json({ error: "Customer must be provided to create a new pet" });
-                const newPet = petRepo.create({
-                    name: petData.name || '',
-                    species: petData.species || '',
-                    breed: petData.breed || '',
-                    dateOfBirth: petData.dateOfBirth ? new Date(petData.dateOfBirth) : new Date(),
-                    gender: petData.gender || 'Unknown',
-                    weight: petData.weight || null,
-                    owner: customer,
-                });
-                await petRepo.save(newPet);
-                pet = newPet;
             }
 
             if (veterinarianId) {

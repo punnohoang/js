@@ -27,7 +27,13 @@ export default function DashboardPage() {
     setLoading(true)
     const response = await apiClient.getStatistics()
     if (response.success && response.data) {
-      setStats(response.data)
+      // Some servers return { success: true, data: { ... } }
+      // while others may directly return the stats object. Handle both.
+      let payload: any = response.data
+      if (payload && typeof payload === 'object' && 'data' in payload) {
+        payload = (payload as any).data
+      }
+      setStats(payload)
     }
     setLoading(false)
   }
@@ -264,7 +270,7 @@ function AdminDashboard({ stats, loading }: { stats: any; loading: boolean }) {
             <CardTitle className="text-sm font-medium">Tổng người dùng</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalCustomers || 0}</div>
+            <div className="text-2xl font-bold">{stats?.totalUsers ?? stats?.totalCustomers ?? 0}</div>
             <p className="text-xs text-muted-foreground">Tất cả tài khoản</p>
           </CardContent>
         </Card>

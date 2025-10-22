@@ -8,6 +8,7 @@ import { petRoutes } from "./routes/pet.routes";
 import { appointmentRoutes } from "./routes/appointment.routes";
 import { userRoutes } from "./routes/user.routes";
 import { invoiceRoutes } from "./routes/invoice.routes";
+import { statisticsRoutes } from "./routes/statistics.routes";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -26,6 +27,7 @@ app.use("/api/pets", petRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/invoices", invoiceRoutes);
+app.use("/api/statistics", statisticsRoutes);
 
 // Initialize database connection
 AppDataSource.initialize()
