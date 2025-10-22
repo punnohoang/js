@@ -64,9 +64,9 @@ export default function AppointmentsPage() {
         customerIdToSend = selectedPet.ownerId || (selectedPet.owner && String(selectedPet.owner.id)) || ''
       }
     }
-  if (!customerIdToSend) return setError('Vui lòng chọn khách hàng')
-  if (!formData.petId && !formData.petName) return setError('Vui lòng nhập hoặc chọn thú cưng')
-  if (!formData.petType) return setError('Vui lòng nhập loại thú cưng')
+    if (!customerIdToSend) return setError('Vui lòng chọn khách hàng')
+    if (!formData.petId && !formData.petName) return setError('Vui lòng nhập hoặc chọn thú cưng')
+    if (!formData.petType) return setError('Vui lòng nhập loại thú cưng')
     if (!formData.appointmentDate) return setError('Vui lòng chọn ngày hẹn')
     if (!formData.appointmentTime) return setError('Vui lòng chọn giờ hẹn')
 
@@ -104,7 +104,7 @@ export default function AppointmentsPage() {
       if (response.success && response.data) {
         await loadAppointments()
         setShowForm(false)
-  setFormData({ petName: "", petId: "", petType: "", customerId: "", appointmentDate: "", appointmentTime: "", reason: "", veterinarianId: "" })
+        setFormData({ petName: "", petId: "", petType: "", customerId: "", appointmentDate: "", appointmentTime: "", reason: "", veterinarianId: "" })
       } else {
         // show detailed server error when available
         const serverError = (response && (response.error || (response as any).message)) || 'Failed to create appointment'
