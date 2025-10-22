@@ -36,7 +36,8 @@ export class AuthController {
             user.firstName = firstName;
             user.lastName = lastName;
             user.email = email;
-            user.password = await bcrypt.hash(password, 10);
+            // do not pre-hash here — the User entity has a @BeforeInsert hook that hashes the password
+            user.password = password;
             user.role = role;
 
             // Save user
@@ -118,6 +119,46 @@ export class AuthController {
             return response.status(500).json({
                 error: error instanceof Error ? error.message : "Error during login"
             });
+        }
+    }
+
+    async me(request: Request, response: Response) {
+        try {
+            const authHeader = request.headers.authorization as string | undefined;
+            if (!authHeader) {
+                return response.status(401).json({ error: 'Authorization header missing' });
+            }
+
+            const token = authHeader.split(' ')[1];
+            if (!token) {
+                return response.status(401).json({ error: 'Token missing' });
+            }
+
+            let payload: any;
+            try {
+                payload = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            } catch (err) {
+                return response.status(401).json({ error: 'Invalid token' });
+            }
+
+            const userId = payload.userId;
+            if (!userId) {
+                return response.status(401).json({ error: 'Invalid token payload' });
+            }
+
+            const user = await this.userRepository.findOne({
+                where: { id: userId },
+                select: ['id', 'firstName', 'lastName', 'email', 'role']
+            });
+
+            if (!user) {
+                return response.status(404).json({ error: 'User not found' });
+            }
+
+            return response.json(user);
+        } catch (error) {
+            console.error('Me endpoint error:', error);
+            return response.status(500).json({ error: 'Error fetching current user' });
         }
     }
 }

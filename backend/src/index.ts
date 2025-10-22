@@ -42,7 +42,7 @@ AppDataSource.initialize()
         }
 
         // Start Express server
-        const port = process.env.PORT || 3000;
+        const port = parseInt(process.env.PORT || "4000");
         app.listen(port, () => {
             console.log(`Server is running on port ${port}`);
             console.log(`API URL: http://localhost:${port}/api`);

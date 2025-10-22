@@ -41,21 +41,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false
   }
 
-  const register = async (email: string, password: string, name: string, role: string): Promise<boolean> => {
-    try {
-      const [firstName, ...lastNameParts] = name.trim().split(/\s+/)
-      const lastName = lastNameParts.join(" ")
-
-      const response = await apiClient.register(email, password, firstName, lastName, role)
-      if (response.success && response.data) {
-        apiClient.setToken(response.data.token)
-        setUser(response.data.user)
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error("Registration error:", error)
-      throw error
+  const register = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role: string,
+  ): Promise<boolean> => {
+    const response = await apiClient.register(email, password, firstName, lastName, role)
+    if (response.success && response.data) {
+      apiClient.setToken(response.data.token)
+      setUser(response.data.user)
+      return true
     }
     return false
   }
