@@ -200,7 +200,7 @@ export default function AppointmentsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Loại thú cưng</label>
+                    <label className="text-sm font-medium"></label>
                     {/* For receptionists/customers choose an existing pet from the customer's pets; fallback to entering a name */}
                     {user?.role === 'RECEPTIONIST' ? (
                       <>
@@ -218,34 +218,22 @@ export default function AppointmentsPage() {
                           </SelectContent>
                         </Select>
 
-                        <label className="text-sm font-medium">Thú cưng</label>
-                        <Select value={formData.petId} onValueChange={(value) => setFormData({ ...formData, petId: value })}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn thú cưng" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {pets.map((p) => (
-                              <SelectItem key={p.id} value={String(p.id)}>
-                                {p.name} {p.species ? `- ${p.species}` : ''}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <label className="text-sm font-medium">Loại thú cưng</label>
+                        <Input
+                          placeholder="Nhập loại thú cưng (ví dụ: Chó, Mèo)"
+                          value={formData.petType}
+                          onChange={(e) => setFormData({ ...formData, petType: e.target.value })}
+                          required
+                        />
                       </>
                     ) : (
-                      // Customer role: list their pets (loaded when form opens)
-                      <Select value={formData.petId} onValueChange={(value) => setFormData({ ...formData, petId: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn thú cưng" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {pets.map((p) => (
-                            <SelectItem key={p.id} value={String(p.id)}>
-                              {p.name} {p.species ? `- ${p.species}` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      // Customer role: allow typing pet type
+                      <Input
+                        placeholder="Nhập loại thú cưng (ví dụ: Chó, Mèo)"
+                        value={formData.petType}
+                        onChange={(e) => setFormData({ ...formData, petType: e.target.value })}
+                        required
+                      />
                     )}
                   </div>
                   <div className="space-y-2">
