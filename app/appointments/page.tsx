@@ -102,7 +102,10 @@ export default function AppointmentsPage() {
       console.log('Creating appointment with payload', payload)
       const response = await apiClient.createAppointment(payload as any)
       if (response.success && response.data) {
-        await loadAppointments()
+        // Server returns enriched appointment with petName, ownerName, date, time
+        const saved = response.data as any
+        // Insert into appointments list so it shows up immediately in upcoming
+        setAppointments((prev) => [saved, ...prev])
         setShowForm(false)
         setFormData({ petName: "", petId: "", petType: "", customerId: "", appointmentDate: "", appointmentTime: "", reason: "", veterinarianId: "" })
       } else {
@@ -128,7 +131,16 @@ export default function AppointmentsPage() {
       }
 
       const vetsResp = await apiClient.getUsers('VETERINARIAN')
-      if (vetsResp.success && vetsResp.data) setVets(vetsResp.data)
+      if (vetsResp.success && vetsResp.data) {
+        // Ensure we only include users with VETERINARIAN role and dedupe
+        const unique: Record<string, any> = {}
+          ; (vetsResp.data as any[])
+            .filter((v) => v.role === 'VETERINARIAN')
+            .forEach((v) => {
+              unique[String(v.id)] = v
+            })
+        setVets(Object.values(unique))
+      }
     }
 
     if (showForm && user?.role === 'RECEPTIONIST') {
@@ -254,6 +266,23 @@ export default function AppointmentsPage() {
                       required
                     />
                   </div>
+                  {user?.role === 'RECEPTIONIST' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Bác sĩ</label>
+                      <Select value={formData.veterinarianId} onValueChange={(value) => setFormData({ ...formData, veterinarianId: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn bác sĩ" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vets.map((v) => (
+                            <SelectItem key={v.id} value={String(v.id)}>
+                              {v.firstName} {v.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Lý do khám</label>
@@ -293,7 +322,11 @@ export default function AppointmentsPage() {
                     {upcomingAppointments.map((appointment) => (
                       <div key={appointment.id} className="flex items-center justify-between rounded-lg border p-4">
                         <div className="space-y-1">
-                          <p className="font-medium">{appointment.petName}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{appointment.petName}</p>
+                            <span className="text-sm text-muted-foreground">({(appointment as any).petType || 'Unknown species'})</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">Chủ: {appointment.ownerName || ''}</p>
                           <div className="flex gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
@@ -305,6 +338,8 @@ export default function AppointmentsPage() {
                             </div>
                           </div>
                           <p className="text-sm">{appointment.reason}</p>
+                          <p className="text-sm text-muted-foreground">Bác sĩ: {(appointment as any).veterinarian ? `${((appointment as any).veterinarian.firstName || '')} ${((appointment as any).veterinarian.lastName || '')}`.trim() : ((appointment as any).veterinarianName || '')}</p>
+                          {(appointment as any).notes && <p className="text-sm">Ghi chú: {(appointment as any).notes}</p>}
                         </div>
                         <div className="text-right">
                           <span
@@ -335,7 +370,11 @@ export default function AppointmentsPage() {
                     {completedAppointments.map((appointment) => (
                       <div key={appointment.id} className="flex items-center justify-between rounded-lg border p-4">
                         <div className="space-y-1">
-                          <p className="font-medium">{appointment.petName}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{appointment.petName}</p>
+                            <span className="text-sm text-muted-foreground">({(appointment as any).petType || 'Unknown species'})</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">Chủ: {appointment.ownerName || ''}</p>
                           <div className="flex gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
@@ -347,6 +386,8 @@ export default function AppointmentsPage() {
                             </div>
                           </div>
                           <p className="text-sm">{appointment.reason}</p>
+                          <p className="text-sm text-muted-foreground">Bác sĩ: {(appointment as any).veterinarian ? `${((appointment as any).veterinarian.firstName || '')} ${((appointment as any).veterinarian.lastName || '')}`.trim() : ((appointment as any).veterinarianName || '')}</p>
+                          {(appointment as any).notes && <p className="text-sm">Ghi chú: {(appointment as any).notes}</p>}
                         </div>
                         <Button size="sm" variant="outline">
                           Xem chi tiết

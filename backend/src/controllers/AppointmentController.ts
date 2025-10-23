@@ -114,6 +114,10 @@ export class AppointmentController {
             if (veterinarianId) {
                 veterinarian = await userRepo.findOne({ where: { id: parseInt(veterinarianId) } });
                 if (!veterinarian) return response.status(400).json({ error: "Veterinarian not found" });
+                // Ensure the selected user is actually a veterinarian
+                if ((veterinarian as any).role !== 'VETERINARIAN') {
+                    return response.status(400).json({ error: "Selected user is not a veterinarian" });
+                }
             }
 
             const appointment = this.appointmentRepository.create({
