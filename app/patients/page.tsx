@@ -47,7 +47,7 @@ export default function PatientsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Danh sách bệnh nhân</CardTitle>
-            <CardDescription>Tổng cộng: 156 bệnh nhân</CardDescription>
+            <CardDescription>Tổng cộng: 56 bệnh nhân</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

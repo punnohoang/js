@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
-import { Plus, Edit2, Trash2, Search, Loader2 } from "lucide-react"
+import { Edit2, Trash2, Search, Loader2 } from "lucide-react"
 import { apiClient, type User } from "@/lib/api-client"
 
 export default function UsersPage() {
@@ -95,10 +95,6 @@ export default function UsersPage() {
             <h1 className="text-3xl font-bold">Quản lý tài khoản</h1>
             <p className="text-muted-foreground">Quản lý người dùng và phân quyền</p>
           </div>
-          <Button onClick={() => setShowForm(!showForm)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Thêm tài khoản
-          </Button>
         </div>
 
         {error && (

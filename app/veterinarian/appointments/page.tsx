@@ -43,7 +43,7 @@ export default function VetAppointmentsPage() {
         try {
             setError(null)
             const response = await apiClient.updateAppointment(appointment.id, {
-                status: "VET_APPROVED",
+                status: "CONFIRMED",
                 veterinarianId: user?.id
             })
 
@@ -68,9 +68,8 @@ export default function VetAppointmentsPage() {
         try {
             setError(null)
             const response = await apiClient.updateAppointment(selectedAppointment.id, {
-                status: "VET_REJECTED",
-                veterinarianId: user?.id,
-                notes: rejectReason
+                status: "CANCELLED",
+                veterinarianId: user?.id
             })
 
             if (response.success) {
